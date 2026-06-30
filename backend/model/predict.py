@@ -1,10 +1,15 @@
 import joblib
 import pandas as pd
+import os
 
 from rules import apply_rules
 
-model = joblib.load("model/model.pkl")
-encoders = joblib.load("model/encoders.pkl")
+# Load model and encoders from environment-configured paths
+MODEL_PATH = os.getenv("MODEL_PATH", "model/model.pkl")
+ENCODERS_PATH = os.getenv("ENCODERS_PATH", "model/encoders.pkl")
+
+model = joblib.load(MODEL_PATH)
+encoders = joblib.load(ENCODERS_PATH)
 
 
 FEATURE_DESCRIPTIONS = {
@@ -18,8 +23,16 @@ FEATURE_DESCRIPTIONS = {
 }
 
 
-def predict(transaction):
+def predict(transaction: dict) -> dict:
+    """
+    Make fraud prediction using XGBoost model and rule engine.
 
+    Args:
+        transaction: Dictionary containing transaction features
+
+    Returns:
+        Dictionary with prediction, probability, risk score, and explanations
+    """
     data = transaction.copy()
 
     # Handle unseen categories by using a default value

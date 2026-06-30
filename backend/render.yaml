@@ -1,0 +1,22 @@
+services:
+  - type: web
+    name: fraud-detection-api
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn api:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: fraud-detection-db
+          property: connectionString
+      - key: ALLOWED_ORIGINS
+        value: https://your-frontend.vercel.app,http://localhost:3000
+      - key: MODEL_PATH
+        value: model/model.pkl
+      - key: ENCODERS_PATH
+        value: model/encoders.pkl
+
+databases:
+  - name: fraud-detection-db
+    databaseName: fraud_detection
+    user: fraud_detection_user

@@ -17,7 +17,10 @@ app = FastAPI(
 )
 
 # CORS configuration - allow specific origins in production
-allowed_origins = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000").split(",")
+# Comma-separated list of allowed origins
+allowed_origins_str = os.getenv("ALLOWED_ORIGINS", "http://localhost:3000")
+allowed_origins = [origin.strip() for origin in allowed_origins_str.split(",") if origin.strip()]
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allowed_origins,
@@ -118,7 +121,7 @@ def predict_transaction(data: TransactionInput):
         )
 
         db.add(txn)
-        db.commit()
+        db.flush()  # Flush to get ID without committing
         db.refresh(txn)
 
     # ---------------- Response ----------------

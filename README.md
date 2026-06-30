@@ -1,6 +1,6 @@
 # Fraud Detection System
 
-A production-ready fraud detection system built with React.js, FastAPI, XGBoost, PostgreSQL. The system uses machine learning combined with rule-based analysis to detect fraudulent transactions in real-time.
+A production-ready fraud detection system built with React.js, FastAPI, XGBoost, and PostgreSQL. The system uses machine learning combined with rule-based analysis to detect fraudulent transactions in real-time.
 
 ## Architecture
 
@@ -32,7 +32,7 @@ A production-ready fraud detection system built with React.js, FastAPI, XGBoost,
     └────────┬────────┘
              ↓
     ┌─────────────────┐
-    │    SQLite DB     │
+    │   PostgreSQL    │
     └─────────────────┘
 ```
 
@@ -46,6 +46,7 @@ A production-ready fraud detection system built with React.js, FastAPI, XGBoost,
 - **Analytics**: Risk distribution and trend analysis
 - **Responsive UI**: Modern, dark-themed interface
 - **RESTful API**: Well-documented FastAPI endpoints
+- **Production Ready**: Deployed on Render with PostgreSQL
 
 ## Tech Stack
 
@@ -60,6 +61,7 @@ A production-ready fraud detection system built with React.js, FastAPI, XGBoost,
 - Uvicorn 0.32
 - SQLAlchemy 2.0
 - Pydantic 2.9
+- PostgreSQL
 
 ### Machine Learning
 - XGBoost 2.1
@@ -68,7 +70,11 @@ A production-ready fraud detection system built with React.js, FastAPI, XGBoost,
 - numpy 2.0
 
 ### Database
-PostgreSQL (configurable)
+- PostgreSQL (Render managed database)
+
+### Deployment
+- Render (Backend & Database)
+- Vercel (Frontend)
 
 ## Project Structure
 
@@ -80,6 +86,7 @@ PostgreSQL (configurable)
 │   ├── rules.py               # Rule engine
 │   ├── requirements.txt       # Python dependencies
 │   ├── .env.example           # Environment variables template
+│   ├── render.yaml            # Render deployment configuration
 │   ├── generate_dataset.py    # Synthetic data generator
 │   ├── model/
 │   │   ├── model.pkl          # Trained XGBoost model
@@ -101,6 +108,7 @@ PostgreSQL (configurable)
 │   └── services/
 │       └── api.js             # API client
 ├── public/                    # Static assets
+├── .env.example               # Frontend environment variables template
 ├── package.json               # Node.js dependencies
 ├── .gitignore                 # Git ignore rules
 └── README.md                  # This file
@@ -114,6 +122,7 @@ PostgreSQL (configurable)
 - Node.js 16+
 - pip
 - npm
+- PostgreSQL (local) or Render account (production)
 
 ### Backend Setup
 
@@ -150,12 +159,27 @@ cp .env.example .env
 # Edit .env with your configuration
 ```
 
-6. **Generate training data**
+6. **Set up PostgreSQL database**
+
+**Local PostgreSQL:**
+```bash
+# Create database
+createdb fraud_detection
+
+# Update .env with your connection string
+DATABASE_URL=postgresql://user:password@localhost:5432/fraud_detection
+```
+
+**Render (Production):**
+- Create a PostgreSQL database on Render
+- Copy the connection string to Render environment variables
+
+7. **Generate training data**
 ```bash
 python generate_dataset.py
 ```
 
-7. **Train the model**
+8. **Train the model**
 ```bash
 cd model
 python train.py
@@ -172,6 +196,12 @@ cd ..
 2. **Install dependencies**
 ```bash
 npm install
+```
+
+3. **Configure environment variables**
+```bash
+cp .env.example .env
+# Edit .env with your backend URL
 ```
 
 ## Running the Application
@@ -195,6 +225,58 @@ npm start
 ```
 
 Frontend will be available at `http://localhost:3000`
+
+## Deploying to Render
+
+### Backend Deployment
+
+1. **Push code to GitHub**
+
+2. **Create PostgreSQL Database on Render**
+   - Go to Render Dashboard
+   - Create New → PostgreSQL
+   - Name: `fraud-detection-db`
+   - Save the connection string
+
+3. **Create Web Service on Render**
+   - Go to Render Dashboard
+   - Create New → Web Service
+   - Connect your GitHub repository
+   - Root Directory: `backend`
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `uvicorn api:app --host 0.0.0.0 --port $PORT`
+
+4. **Configure Environment Variables**
+   ```
+   DATABASE_URL=<your-postgres-connection-string>
+   ALLOWED_ORIGINS=https://your-frontend.vercel.app,http://localhost:3000
+   MODEL_PATH=model/model.pkl
+   ENCODERS_PATH=model/encoders.pkl
+   ```
+
+5. **Deploy**
+   - Click "Deploy Web Service"
+   - Wait for build to complete
+   - Note your backend URL (e.g., `https://fraud-detection-api.onrender.com`)
+
+### Frontend Deployment (Vercel)
+
+1. **Push code to GitHub**
+
+2. **Create Project on Vercel**
+   - Go to Vercel Dashboard
+   - Add New Project
+   - Import your GitHub repository
+
+3. **Configure Environment Variables**
+   ```
+   REACT_APP_API_URL=https://your-backend.onrender.com
+   ```
+
+4. **Deploy**
+   - Click "Deploy"
+   - Wait for build to complete
+   - Note your frontend URL
 
 ## API Endpoints
 
@@ -307,14 +389,26 @@ risk_score = (fraud_probability × 70) + rule_score
 
 ## Environment Variables
 
-See `backend/.env.example` for all available configuration options.
+### Backend (backend/.env)
+```
+DATABASE_URL=postgresql://user:password@localhost:5432/fraud_detection
+ALLOWED_ORIGINS=http://localhost:3000,https://your-frontend.vercel.app
+MODEL_PATH=model/model.pkl
+ENCODERS_PATH=model/encoders.pkl
+```
 
+### Frontend (.env)
 ```
-DATABASE_URL=sqlite:///./fraud_detection.db
-ALLOWED_ORIGINS=http://localhost:3000
-API_HOST=0.0.0.0
-API_PORT=8000
+REACT_APP_API_URL=http://localhost:8000
+# Production: REACT_APP_API_URL=https://your-backend.onrender.com
 ```
+
+### Render Environment Variables
+Configure these in your Render web service dashboard:
+- `DATABASE_URL` - PostgreSQL connection string (auto-linked from database)
+- `ALLOWED_ORIGINS` - Comma-separated list of allowed frontend URLs
+- `MODEL_PATH` - Path to model.pkl file
+- `ENCODERS_PATH` - Path to encoders.pkl file
 
 ## Screenshots
 
@@ -330,6 +424,47 @@ API_PORT=8000
 ### Transaction History
 [Placeholder: Transaction table with filters]
 
+## Troubleshooting
+
+### Backend Issues
+
+**ModuleNotFoundError: No module named 'psycopg2'**
+```bash
+pip install psycopg2-binary
+```
+
+**Database connection error**
+- Verify DATABASE_URL is set correctly
+- Ensure PostgreSQL is running (local) or Render database is active
+- Check firewall/network settings
+
+**Model loading error**
+- Verify model.pkl and encoders.pkl exist in backend/model/
+- Check MODEL_PATH and ENCODERS_PATH environment variables
+
+### Frontend Issues
+
+**CORS error**
+- Verify ALLOWED_ORIGINS includes your frontend URL
+- Check backend CORS configuration
+
+**API connection error**
+- Verify REACT_APP_API_URL is set correctly
+- Check backend is running and accessible
+- Ensure frontend is using the correct protocol (http/https)
+
+### Deployment Issues
+
+**Render build fails**
+- Check build logs for specific errors
+- Verify all dependencies are in requirements.txt
+- Ensure model files are committed to Git
+
+**Database connection timeout**
+- Verify Render PostgreSQL is active
+- Check DATABASE_URL format
+- Ensure database is in same region as web service
+
 ## Future Improvements
 
 - [ ] Add user authentication
@@ -343,7 +478,8 @@ API_PORT=8000
 - [ ] Docker containerization
 - [ ] CI/CD pipeline
 - [ ] Add monitoring and alerting
-- [ ] Support for PostgreSQL out of the box
+- [ ] Implement caching with Redis
+- [ ] Add API rate limiting and throttling
 
 ## Contributing
 
@@ -359,7 +495,7 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 
 ## Authors
 
-- **Your Name** - Initial work
+- **Peter P Saji** - Initial work
 
 ## Acknowledgments
 
@@ -367,3 +503,5 @@ This project is licensed under the MIT License - see the LICENSE file for detail
 - FastAPI for the web framework
 - React for the frontend UI
 - Recharts for data visualization
+- Render for hosting
+- Vercel for frontend deployment

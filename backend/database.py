@@ -4,27 +4,17 @@ from datetime import datetime
 import os
 from contextlib import contextmanager
 
-# Database URL from environment variable or default to SQLite
-DATABASE_URL = os.getenv(
-    "DATABASE_URL",
-    "sqlite:///./fraud_detection.db"
-)
+# Database URL from environment variable (PostgreSQL required)
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-# Ensure data directory exists for SQLite
-if DATABASE_URL.startswith("sqlite:///"):
-    db_path = DATABASE_URL.replace("sqlite:///", "")
-    db_dir = os.path.dirname(db_path)
-    if db_dir:
-        os.makedirs(db_dir, exist_ok=True)
-
-# Create engine with appropriate settings
-if DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(
-        DATABASE_URL,
-        connect_args={"check_same_thread": False}
+if not DATABASE_URL:
+    raise ValueError(
+        "DATABASE_URL environment variable is required. "
+        "Set it to your PostgreSQL connection string."
     )
-else:
-    engine = create_engine(DATABASE_URL)
+
+# Create PostgreSQL engine
+engine = create_engine(DATABASE_URL, pool_pre_ping=True)
 
 SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
 
@@ -59,7 +49,6 @@ def get_db():
     db = SessionLocal()
     try:
         yield db
-        db.commit()
     except Exception:
         db.rollback()
         raise

@@ -36,19 +36,11 @@ ENV/
 # Machine Learning
 *.joblib
 *.pickle
-*.pkl
 *.h5
 *.onnx
 *.pt
 *.pth
-model.pkl
-encoders.pkl
-
-# Database
-*.db
-*.sqlite
-*.sqlite3
-fraud_detection.db
+# Note: model.pkl and encoders.pkl are committed for deployment
 
 # Logs
 *.log
