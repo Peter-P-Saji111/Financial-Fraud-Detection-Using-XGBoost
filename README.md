@@ -1,6 +1,6 @@
 # Fraud Detection System
 
-A production-ready fraud detection system built with React.js, FastAPI, XGBoost, and SQLite. The system uses machine learning combined with rule-based analysis to detect fraudulent transactions in real-time.
+A production-ready fraud detection system built with React.js, FastAPI, XGBoost, PostgreSQL. The system uses machine learning combined with rule-based analysis to detect fraudulent transactions in real-time.
 
 ## Architecture
 
@@ -68,7 +68,7 @@ A production-ready fraud detection system built with React.js, FastAPI, XGBoost,
 - numpy 2.0
 
 ### Database
-- SQLite (default) / PostgreSQL (configurable)
+PostgreSQL (configurable)
 
 ## Project Structure
 
